@@ -43,7 +43,7 @@ class ShakaVideoPlayer extends VideoElementPlayer {
     videoElement.setAttribute('autoplay', 'false');
 
     setupElementListeners();
-    shaka.installPollifills();
+    shaka.installPolyfills();
 
     if (shaka.Player.isBrowserSupported()) {
       _player = shaka.Player(videoElement);

@@ -12,7 +12,7 @@ import 'dart:js';
 import 'package:js/js.dart';
 
 @JS('polyfill.installAll')
-external void installPollifills();
+external void installPolyfills();
 
 @JS()
 class Player {
