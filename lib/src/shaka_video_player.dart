@@ -13,6 +13,9 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'package:video_player_web/src/shaka.dart' as shaka;
 import 'package:video_player_web/src/video_element_player.dart';
 
+const String _kScriptUrl =
+    'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.1.0/shaka-player.compiled.debug.min.js';
+
 class ShakaVideoPlayer extends VideoElementPlayer {
   ShakaVideoPlayer({
     required String src,
@@ -32,6 +35,32 @@ class ShakaVideoPlayer extends VideoElementPlayer {
 
   @override
   Future<void> initialize() async {
+    try {
+      await _loadScript();
+      await _afterLoadScript();
+    } on html.Event catch (ex) {
+      eventController.addError(PlatformException(
+        code: ex.type,
+        message: 'Error loading Shaka Player: $_kScriptUrl',
+      ));
+    }
+  }
+
+  Future<dynamic> _loadScript() async {
+    if (shaka.isNotLoaded) {
+      html.ScriptElement script = html.ScriptElement()
+        ..type = 'text/javascript'
+        ..src = _kScriptUrl
+        ..async = false
+        ..defer = true;
+
+      html.document.body!.append(script);
+
+      return script.onLoad.first;
+    }
+  }
+
+  Future<void> _afterLoadScript() async {
     videoElement
       ..autoplay = false
       ..controls = false;
@@ -43,7 +72,7 @@ class ShakaVideoPlayer extends VideoElementPlayer {
     videoElement.setAttribute('autoplay', 'false');
 
     setupElementListeners();
-    shaka.installPollifills();
+    shaka.installPolyfills();
 
     if (shaka.Player.isBrowserSupported()) {
       _player = shaka.Player(videoElement);
