@@ -30,5 +30,11 @@ abstract class VideoPlayer {
 
   Duration getPosition();
 
+  Future<List<TrackSelection>> getTrackSelections({
+    TrackSelectionNameResource? trackSelectionNameResource,
+  });
+
+  Future<void> setTrackSelection(TrackSelection trackSelection);
+
   void dispose();
 }

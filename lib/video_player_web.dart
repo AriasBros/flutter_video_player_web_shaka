@@ -71,20 +71,6 @@ class VideoPlayerPlugin extends VideoPlayerPlatform {
         return Future<int>.error(UnimplementedError('web implementation of video_player cannot play content uri'));
     }
 
-    /*
-    final VideoElement videoElement = VideoElement()
-      ..id = 'videoElement-$textureId'
-      ..src = uri
-      ..style.border = 'none'
-      ..style.height = '100%'
-      ..style.width = '100%';
-
-    // TODO(hterkelsen): Use initialization parameters once they are available
-    ui.platformViewRegistry.registerViewFactory('videoPlayer-$textureId', (int viewId) => videoElement);
-
-    final VideoPlayer player = VideoPlayer(videoElement: videoElement)..initialize();
-    */
-
     final VideoPlayer player = ShakaVideoPlayer(src: uri);
     player.registerElement(textureId);
     await player.initialize();
@@ -127,6 +113,23 @@ class VideoPlayerPlugin extends VideoPlayerPlatform {
   @override
   Future<Duration> getPosition(int textureId) async {
     return _player(textureId).getPosition();
+  }
+
+  /// Gets the video [TrackSelection]s. For convenience if the video file has at
+  /// least one [TrackSelection] for a specific type, the auto track selection will
+  /// be added to this list with that type.
+  @override
+  Future<List<TrackSelection>> getTrackSelections(
+    int textureId, {
+    TrackSelectionNameResource? trackSelectionNameResource,
+  }) {
+    return _player(textureId).getTrackSelections(trackSelectionNameResource: trackSelectionNameResource);
+  }
+
+  /// Sets the selected video track selection.
+  @override
+  Future<void> setTrackSelection(int textureId, TrackSelection trackSelection) {
+    return _player(textureId).setTrackSelection(trackSelection);
   }
 
   @override

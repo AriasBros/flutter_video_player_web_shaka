@@ -23,6 +23,13 @@ dependencies:
     sdk: flutter
   video_player_platform_interface: ">=4.2.0 <6.0.0"
 
+dependency_overrides:
+  video_player_platform_interface:
+    git:
+      url: https://github.com/AriasBros/flutter_plugins.git
+      path: packages/video_player/video_player_platform_interface
+      ref: feature_track_selection_platform_interface
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

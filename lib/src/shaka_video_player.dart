@@ -77,4 +77,31 @@ class ShakaVideoPlayer extends VideoElementPlayer {
     _player.destroy();
     super.dispose();
   }
+
+  @override
+  Future<List<TrackSelection>> getTrackSelections({
+    TrackSelectionNameResource? trackSelectionNameResource,
+  }) async {
+    return [
+      ..._player.getAudioLanguagesAndRoles().map((track) => track.toTrackSelection()).toList(),
+      ..._player.getTextLanguagesAndRoles().map((track) => track.toTrackSelection()).toList(),
+    ];
+  }
+
+  @override
+  Future<void> setTrackSelection(TrackSelection trackSelection) async {
+    _player.configure(jsify({
+      'abr': {'enabled': false}
+    }));
+
+    if (trackSelection.trackType == TrackSelectionType.audio) {
+      _player.selectAudioLanguage(trackSelection.language!);
+    } else if (trackSelection.trackType == TrackSelectionType.text) {
+      _player.selectTextLanguage(trackSelection.language!);
+    }
+
+    _player.configure(jsify({
+      'abr': {'enabled': true}
+    }));
+  }
 }
