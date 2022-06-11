@@ -11,6 +11,9 @@ import 'dart:js';
 // ignore: depend_on_referenced_packages
 import 'package:js/js.dart';
 
+bool get isLoaded => context.hasProperty('shaka');
+bool get isNotLoaded => !isLoaded;
+
 @JS('polyfill.installAll')
 external void installPolyfills();
 
