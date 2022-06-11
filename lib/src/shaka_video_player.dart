@@ -59,26 +59,19 @@ class ShakaVideoPlayer extends VideoElementPlayer {
 
   Future<void> _afterLoadScript() async {
     videoElement
+      // Set autoplay to false since most browsers won't autoplay a video unless it is muted
       ..autoplay = false
       ..controls = false;
 
     // Allows Safari iOS to play the video inline
     videoElement.setAttribute('playsinline', 'true');
 
-    // Set autoplay to false since most browsers won't autoplay a video unless it is muted
-    videoElement.setAttribute('autoplay', 'false');
-
-    setupElementListeners();
     shaka.installPolyfills();
 
     if (shaka.Player.isBrowserSupported()) {
       _player = shaka.Player(videoElement);
 
-      // Listen for error events.
-      _player.addEventListener(
-        'error',
-        allowInterop((event) => _onShakaPlayerError(event.detail)),
-      );
+      setupListeners();
 
       try {
         await promiseToFuture(_player.load(src));
@@ -96,6 +89,18 @@ class ShakaVideoPlayer extends VideoElementPlayer {
       message: shaka.errorCategoryName(error.category),
       details: error,
     ));
+  }
+
+  @override
+  @protected
+  void setupListeners() {
+    super.setupListeners();
+
+    // Listen for error events.
+    _player.addEventListener(
+      'error',
+      allowInterop((event) => _onShakaPlayerError(event.detail)),
+    );
   }
 
   @override
