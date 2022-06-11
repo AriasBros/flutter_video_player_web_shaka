@@ -46,9 +46,10 @@ abstract class VideoElementPlayer implements VideoPlayer {
   final StreamController<VideoEvent> _eventController;
   late html.VideoElement _videoElement;
   bool _isBuffering = false;
+  bool _isInitialized = false;
 
   @protected
-  bool isInitialized = false;
+  bool get isInitialized => _isInitialized;
 
   @override
   String get src => _src;
@@ -73,13 +74,8 @@ abstract class VideoElementPlayer implements VideoPlayer {
   }
 
   @protected
-  void setupElementListeners() {
-    videoElement.onCanPlay.listen((dynamic _) {
-      if (!isInitialized) {
-        isInitialized = true;
-        sendInitialized();
-      }
-    });
+  void setupListeners() {
+    videoElement.onCanPlay.listen((dynamic _) => markAsInitializedIfNeeded());
 
     videoElement.onCanPlayThrough.listen((dynamic _) {
       setBuffering(false);
@@ -210,7 +206,14 @@ abstract class VideoElementPlayer implements VideoPlayer {
 
   // Sends an [VideoEventType.initialized] [VideoEvent] with info about the wrapped video.
   @protected
-  void sendInitialized() {
+  void markAsInitializedIfNeeded() {
+    if (!_isInitialized) {
+      _isInitialized = true;
+      _sendInitialized();
+    }
+  }
+
+  void _sendInitialized() {
     final Duration? duration = !_videoElement.duration.isNaN
         ? Duration(
             milliseconds: (_videoElement.duration * 1000).round(),

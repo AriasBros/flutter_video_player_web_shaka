@@ -13,6 +13,9 @@ import 'package:flutter/material.dart';
 import 'package:js/js.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
+bool get isLoaded => context.hasProperty('shaka');
+bool get isNotLoaded => !isLoaded;
+
 @JS('polyfill.installAll')
 external void installPolyfills();
 

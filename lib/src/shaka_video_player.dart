@@ -11,7 +11,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:video_player_web/src/shaka.dart' as shaka;
+import 'package:video_player_web/src/utils.dart';
 import 'package:video_player_web/src/video_element_player.dart';
+
+const String _kPackageName = 'shaka';
+const String _kScriptUrl = 'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.1.0/shaka-player.compiled.min.js';
 
 class ShakaVideoPlayer extends VideoElementPlayer {
   ShakaVideoPlayer({
@@ -32,27 +36,42 @@ class ShakaVideoPlayer extends VideoElementPlayer {
 
   @override
   Future<void> initialize() async {
+    try {
+      await _loadScript();
+      await _afterLoadScript();
+    } on html.Event catch (ex) {
+      eventController.addError(PlatformException(
+        code: ex.type,
+        message: 'Error loading Shaka Player: $_kScriptUrl',
+      ));
+    }
+  }
+
+  Future<dynamic> _loadScript() async {
+    if (shaka.isNotLoaded) {
+      if (context['define']['amd'] != null) {
+        return loadScriptUsingRequireJS(_kPackageName, _kScriptUrl);
+      } else {
+        return loadScriptUsingScriptTag(_kScriptUrl);
+      }
+    }
+  }
+
+  Future<void> _afterLoadScript() async {
     videoElement
+      // Set autoplay to false since most browsers won't autoplay a video unless it is muted
       ..autoplay = false
       ..controls = false;
 
     // Allows Safari iOS to play the video inline
     videoElement.setAttribute('playsinline', 'true');
 
-    // Set autoplay to false since most browsers won't autoplay a video unless it is muted
-    videoElement.setAttribute('autoplay', 'false');
-
-    setupElementListeners();
     shaka.installPolyfills();
 
     if (shaka.Player.isBrowserSupported()) {
       _player = shaka.Player(videoElement);
 
-      // Listen for error events.
-      _player.addEventListener(
-        'error',
-        allowInterop((event) => _onShakaPlayerError(event.detail)),
-      );
+      setupListeners();
 
       try {
         await promiseToFuture(_player.load(src));
@@ -70,6 +89,18 @@ class ShakaVideoPlayer extends VideoElementPlayer {
       message: shaka.errorCategoryName(error.category),
       details: error,
     ));
+  }
+
+  @override
+  @protected
+  void setupListeners() {
+    super.setupListeners();
+
+    // Listen for error events.
+    _player.addEventListener(
+      'error',
+      allowInterop((event) => _onShakaPlayerError(event.detail)),
+    );
   }
 
   @override
