@@ -11,10 +11,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:video_player_web/src/shaka.dart' as shaka;
+import 'package:video_player_web/src/utils.dart';
 import 'package:video_player_web/src/video_element_player.dart';
 
-const String _kScriptUrl =
-    'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.1.0/shaka-player.compiled.debug.min.js';
+const String _kPackageName = 'shaka';
+const String _kScriptUrl = 'https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.1.0/shaka-player.compiled.min.js';
 
 class ShakaVideoPlayer extends VideoElementPlayer {
   ShakaVideoPlayer({
@@ -48,15 +49,11 @@ class ShakaVideoPlayer extends VideoElementPlayer {
 
   Future<dynamic> _loadScript() async {
     if (shaka.isNotLoaded) {
-      html.ScriptElement script = html.ScriptElement()
-        ..type = 'text/javascript'
-        ..src = _kScriptUrl
-        ..async = false
-        ..defer = true;
-
-      html.document.body!.append(script);
-
-      return script.onLoad.first;
+      if (context['define']['amd'] != null) {
+        return loadScriptUsingRequireJS(_kPackageName, _kScriptUrl);
+      } else {
+        return loadScriptUsingScriptTag(_kScriptUrl);
+      }
     }
   }
 
