@@ -71,21 +71,14 @@ class VideoPlayerPlugin extends VideoPlayerPlatform {
         return Future<int>.error(UnimplementedError('web implementation of video_player cannot play content uri'));
     }
 
-    /*
-    final VideoElement videoElement = VideoElement()
-      ..id = 'videoElement-$textureId'
-      ..src = uri
-      ..style.border = 'none'
-      ..style.height = '100%'
-      ..style.width = '100%';
+    final VideoPlayer player = ShakaVideoPlayer(
+      src: uri,
+      drmType: dataSource.drmDataSource?.type,
+      drmUriLicense: dataSource.drmDataSource?.uriLicense,
+      drmHttpHeaders: dataSource.drmDataSource?.httpHeaders,
+      withCredentials: dataSource.withCredentials,
+    );
 
-    // TODO(hterkelsen): Use initialization parameters once they are available
-    ui.platformViewRegistry.registerViewFactory('videoPlayer-$textureId', (int viewId) => videoElement);
-
-    final VideoPlayer player = VideoPlayer(videoElement: videoElement)..initialize();
-    */
-
-    final VideoPlayer player = ShakaVideoPlayer(src: uri);
     player.registerElement(textureId);
     await player.initialize();
 

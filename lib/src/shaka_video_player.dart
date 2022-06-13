@@ -22,10 +22,33 @@ const String _kShakaScriptUrl = kReleaseMode
 class ShakaVideoPlayer extends VideoElementPlayer {
   ShakaVideoPlayer({
     required String src,
+    String? drmType,
+    String? drmUriLicense,
+    Map<String, String>? drmHttpHeaders,
+    bool withCredentials = false,
     @visibleForTesting StreamController<VideoEvent>? eventController,
-  }) : super(src: src, eventController: eventController);
+  })  : _drmType = drmType,
+        _drmUriLicense = drmUriLicense,
+        _drmHttpHeaders = drmHttpHeaders,
+        _withCredentials = withCredentials,
+        super(src: src, eventController: eventController);
 
   late shaka.Player _player;
+
+  final String? _drmType;
+  final String? _drmUriLicense;
+  final Map<String, String>? _drmHttpHeaders;
+  final bool _withCredentials;
+
+  bool get _hasDrm => _drmType != null && _drmUriLicense != null;
+
+  String get _drmServer {
+    if (_drmType == VideoDrmType.widevine) {
+      return 'com.widevine.alpha';
+    }
+
+    return _drmType!;
+  }
 
   @override
   html.VideoElement createElement(int textureId) {
@@ -73,6 +96,24 @@ class ShakaVideoPlayer extends VideoElementPlayer {
       setupListeners();
 
       try {
+        if (_hasDrm) {
+          _player.configure(
+            jsify({
+              "drm": {
+                "servers": {_drmServer: _drmUriLicense!}
+              }
+            }),
+          );
+        }
+
+        _player.getNetworkingEngine().registerRequestFilter(allowInterop((type, request) {
+          request.allowCrossSiteCredentials = _withCredentials;
+
+          if (type == shaka.RequestType.license && _hasDrm && _drmHttpHeaders?.isNotEmpty == true) {
+            request.headers = jsify(_drmHttpHeaders!);
+          }
+        }));
+
         await promiseToFuture(_player.load(src));
       } on shaka.Error catch (ex) {
         _onShakaPlayerError(ex);
