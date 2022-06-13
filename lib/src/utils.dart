@@ -2,6 +2,14 @@ import 'dart:async';
 import 'dart:html' as html;
 import 'dart:js';
 
+Future<dynamic> loadScript(String packageName, String url) async {
+  if (context['define']['amd'] != null) {
+    return loadScriptUsingRequireJS(packageName, url);
+  } else {
+    return loadScriptUsingScriptTag(url);
+  }
+}
+
 Future<dynamic> loadScriptUsingScriptTag(String url) async {
   html.ScriptElement script = html.ScriptElement()
     ..type = 'text/javascript'
